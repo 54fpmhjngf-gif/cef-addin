@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="16" fill="#2563eb"/>
+  <text x="64" y="52" text-anchor="middle" font-family="monospace" font-size="28" font-weight="bold" fill="white">CEF</text>
+  <text x="64" y="82" text-anchor="middle" font-family="monospace" font-size="18" fill="rgba(255,255,255,0.75)">/mail</text>
+</svg>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEF/mail</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+  :root {
+    --bg:#f4f5f7;--bg2:#ffffff;--bg3:#f0f1f3;--border:#dde1e7;--border2:#c8cdd6;
+    --text:#1a1d23;--text2:#5a6172;--text3:#9aa0ae;
+    --accent:#2563eb;--accent2:#1d4ed8;--accent-bg:#eff6ff;
+    --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+    --yellow:#b45309;--yellow-bg:#fffbeb;--yellow-border:#fde68a;
+    --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+    --r:6px;--r2:10px;
+    --sh:0 1px 3px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg2);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 14px;height:44px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .logo{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:.05em;font-weight:500}
+  .logo span{color:var(--text3)}
+  .vpill{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);font-size:10px;padding:1px 6px;border-radius:20px;font-family:'IBM Plex Mono',monospace;margin-left:8px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px}
+
+  .scroll-area{flex:1;overflow-y:auto;padding:12px}
+  .scroll-area::-webkit-scrollbar{width:4px}
+  .scroll-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+  .section{margin-bottom:12px}
+  .slabel{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;font-weight:500}
+
+  /* Email preview card */
+  .email-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;margin-bottom:10px}
+  .ec-from{font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ec-subj{font-size:11px;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ec-prev{font-size:10.5px;color:var(--text3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ec-lang{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 6px;border-radius:20px;margin-top:6px;font-family:'IBM Plex Mono',monospace}
+  .lc-it{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
+  .lc-en{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+  .lc-es{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+  .lc-de{background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe}
+  .lc-fr{background:#fff1f2;color:#be185d;border:1px solid #fecdd3}
+  .lc-pt{background:#f0fdfa;color:#0f766e;border:1px solid #99f6e4}
+
+  /* Language buttons */
+  .lang-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:10px}
+  .lb{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:5px 4px;font-size:10px;color:var(--text2);cursor:pointer;transition:all .15s;text-align:center;font-family:'IBM Plex Sans',sans-serif}
+  .lb:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+  .lb.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+
+  /* Context select */
+  .csel{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 8px;font-size:11px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;appearance:none;cursor:pointer;margin-bottom:10px}
+  .csel:focus{outline:none;border-color:var(--accent)}
+
+  /* API key area */
+  .apin{background:var(--yellow-bg);border:1px solid var(--yellow-border);border-radius:var(--r);padding:8px 10px;font-size:11px;color:var(--yellow);margin-bottom:10px}
+  .apin input{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:4px 8px;font-size:11px;color:var(--text);font-family:'IBM Plex Mono',monospace;width:100%;margin-top:5px;display:block}
+  .apin input:focus{outline:none;border-color:var(--accent)}
+  .apok{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r);padding:7px 10px;font-size:11px;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:5px}
+
+  /* Generate button */
+  .bgen{width:100%;background:var(--accent);border:none;border-radius:var(--r);padding:9px 14px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;box-shadow:0 1px 3px rgba(37,99,235,.3);margin-bottom:8px}
+  .bgen:hover{background:var(--accent2)}
+  .bgen:disabled{opacity:.4;cursor:not-allowed}
+
+  /* Loading */
+  .ldc{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:14px;display:flex;align-items:center;gap:8px;color:var(--text2);font-size:12px;font-family:'IBM Plex Mono',monospace}
+  .ldr{display:flex;gap:3px}
+  .ld{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:pu 1.2s infinite}
+  .ld:nth-child(2){animation-delay:.2s}.ld:nth-child(3){animation-delay:.4s}
+  @keyframes pu{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+  /* Draft output */
+  .draft-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;animation:fi .2s ease}
+  @keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .dc-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border)}
+  .dc-title{font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;gap:6px}
+  .dc-body{padding:12px;font-size:12px;line-height:1.8;color:var(--text);white-space:pre-wrap;font-family:'IBM Plex Sans',sans-serif;max-height:280px;overflow-y:auto}
+  .dc-body::-webkit-scrollbar{width:3px}
+  .dc-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  .dc-actions{display:flex;gap:5px;padding:8px 12px;border-top:1px solid var(--border);background:var(--bg3);flex-wrap:wrap}
+  .ab{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:4px 9px;font-size:10px;color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:all .15s;white-space:nowrap}
+  .ab:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+  .ab.copied{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+  .ab.reply-btn{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .ab.reply-btn:hover{background:var(--accent2)}
+
+  .nr{background:var(--yellow-bg);border:1px solid var(--yellow-border);border-radius:var(--r2);padding:12px;font-size:12px;color:var(--yellow);line-height:1.5;animation:fi .2s ease}
+  .er{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--r2);padding:12px;font-size:12px;color:var(--red);line-height:1.5;animation:fi .2s ease}
+  .sent-ok{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r2);padding:12px;font-size:12px;color:var(--green);animation:fi .2s ease;display:flex;align-items:center;gap:6px}
+
+  .ph{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 0;gap:6px;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center}
+  .ph-icon{font-size:28px;opacity:.2}
+
+  /* DirectIndustry banner */
+  .di-banner{background:#fff8f0;border:1px solid #ffd0a0;border-radius:var(--r);padding:7px 10px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;animation:fi .15s ease}
+  .di-text{font-size:10.5px;color:#cc5500;display:flex;align-items:center;gap:5px}
+  .di-parse-btn{background:#ff6600;border:none;border-radius:var(--r);padding:3px 8px;font-size:10px;font-weight:600;color:#fff;cursor:pointer}
+
+  .divider{height:1px;background:var(--border);margin:10px 0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center">
+    <span class="logo">CEF<span>/</span>mail</span>
+    <span class="vpill">v7</span>
+  </div>
+  <div style="font-size:10px;color:var(--text3)"><span class="dot"></span>Simon Zerella</div>
+</div>
+
+<div class="scroll-area">
+
+  <!-- Email info card -->
+  <div class="section">
+    <div class="slabel">Email in lettura</div>
+    <div class="email-card" id="emailCard">
+      <div class="ec-from" id="ecFrom">Caricamento...</div>
+      <div class="ec-subj" id="ecSubj">—</div>
+      <div class="ec-prev" id="ecPrev">—</div>
+    </div>
+    <div id="diBanner" style="display:none" class="di-banner">
+      <span class="di-text">🔶 DirectIndustry rilevata</span>
+      <button class="di-parse-btn" onclick="parseDI()">Imposta auto →</button>
+    </div>
+  </div>
+
+  <!-- API key -->
+  <div id="apiNotice" class="apin">
+    <strong>🔑 API Key Anthropic</strong> — inserisci una volta sola.
+    <input type="password" id="apiKey" placeholder="sk-ant-api03-..." oninput="saveK()"/>
+  </div>
+  <div id="apiOk" class="apok" style="display:none">✓ API Key salvata</div>
+
+  <!-- Language -->
+  <div class="section">
+    <div class="slabel">Lingua risposta</div>
+    <div class="lang-grid">
+      <button class="lb active" onclick="sL('auto',this)">🔍 Auto</button>
+      <button class="lb" onclick="sL('IT',this)">🇮🇹 IT</button>
+      <button class="lb" onclick="sL('EN',this)">🇬🇧 EN</button>
+      <button class="lb" onclick="sL('ES',this)">🇪🇸 ES</button>
+      <button class="lb" onclick="sL('DE',this)">🇩🇪 DE</button>
+      <button class="lb" onclick="sL('FR',this)">🇫🇷 FR</button>
+      <button class="lb" onclick="sL('PT',this)">🇵🇹 PT</button>
+    </div>
+  </div>
+
+  <!-- Context -->
+  <div class="section">
+    <div class="slabel">Tipo email</div>
+    <select class="csel" id="ctx">
+      <option value="">Rilevamento automatico</option>
+      <option value="preventivo">Richiesta preventivo</option>
+      <option value="dati_mancanti">Dati tecnici mancanti</option>
+      <option value="negoziazione">Negoziazione prezzo</option>
+      <option value="concorrenza">Cliente valuta concorrente</option>
+      <option value="ordine">Ordine / proforma</option>
+      <option value="rack_info">Info rastrelliere</option>
+      <option value="rack_costoso">Rack troppo costoso</option>
+      <option value="post_vendita">Post-vendita / ricambi</option>
+      <option value="lead_freddo">Lead freddo marketplace</option>
+      <option value="follow_up">Follow-up / ricontatto</option>
+      <option value="promo_double">Proporre Double</option>
+      <option value="riattivazione">Riattivazione inattivo</option>
+      <option value="certificazioni">ISO / MID certificazioni</option>
+      <option value="garanzia">Reclamo / garanzia</option>
+      <option value="spedizione">Spedizione / dogana</option>
+      <option value="agente">Agente / rivenditore</option>
+      <option value="campione">Campione / demo</option>
+    </select>
+  </div>
+
+  <!-- Generate -->
+  <button class="bgen" id="gBtn" onclick="generate()">✦ Genera bozza di risposta</button>
+
+  <!-- Output area -->
+  <div id="output">
+    <div class="ph"><div class="ph-icon">✉</div><div>Premi Genera bozza per iniziare</div></div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// SYSTEM PROMPT CEF
+// ============================================================
+const SP = `Sei Simon Zerella di CEF Srl (Costruzioni Elettromeccaniche Firenze). Genera risposte email esattamente come Simon Zerella le scriverebbe.
+
+CATALOGO PRODOTTI CEF:
+
+RASTRELLIERE:
+SM RACK (mod.0060): h 2/2.5m, portata 300Kg/vano, bobine max Ø600mm, fiancate 40x40x3mm
+SM RACK (mod.0065): h 3/3.5m, portata 300Kg/vano, sicurezze meccaniche anti-fuoriuscita
+RACK (cod.0080): fiancate acciaio UNP 100x8mm, altezze 2-6m, portata vano fino 10.000Kg. Supporti: 0025 (con sicura), 0027 (economico), 0028 (sicurezze sfalsate). Alberi: 0012 (Ø60x3mm,1500Kg), 0015C (Ø60x6mm,2000Kg), 0015CA (auto-centranti), 0015C-30 (Ø30mm,100Kg), 0015C-75 (Ø76x6.3mm,5000Kg).
+
+BOBINATRICI:
+DOUBLE (mod.0419): 220V 0.37Kw, bobine Ø100-600mm, portata 70Kg, cavo Ø2-30mm
+WIRE 1001Q7: 220V 1.1Kw, bobine max Ø1000mm, portata 700Kg, cavo Ø3-50mm
+WIRE 1200Q9/Q13: 220V 1.1Kw, bobine max Ø1250mm, portata 900-1300Kg, cavo Ø3-60mm
+RRM 1600Q20/Q30: 380V 2.2Kw, bobine max Ø1600mm, portata 2000-3000Kg
+RRM 2200Q40/2600Q60: 380V 3Kw, bobine max Ø2200-2600mm, portata 4000-6000Kg
+
+MATASSATRICI:
+EASY (mod.0400): manuale, aspo Ø700mm, portata 150Kg, NO stratificazione
+INTER (mod.0420): manuale, aspo Ø600mm, portata 60Kg, cavo Ø5-23mm, NO stratificazione
+INTERMATRIX (mod.0421): manuale, aspo leve retrattili Ø700mm, portata 150Kg, cavo Ø2-30mm, stratificazione manuale, cesoia, albero svolgitore Ø600mm opzionale
+DOUBLE matassatrice (mod.0419): elettrica 220V 0.37Kw, aspo Ø600mm, portata 70Kg
+FAST EVOLUTION (mod.0451): elettrica 220V 1.1Kw, cavo Ø3-50mm, stratificazione automatica opzionale (380V)
+
+AVVOLGITORI: SMALL 0300 (manuale, portata 70Kg, errore ±3-4%) | SMALL 0300S (misuratore Metal 20, errore ±1-2%)
+
+SOLLEVATORI: IRON 1600/2600/3200 (sollevamento+svolgimento, portata 1500-5000Kg) | EISEN 2500 (doppio cuscinetto, 4000Kg) | TITANIUM 1600/2600 (movimenta+solleva+svolge, portata 1500-6000Kg)
+
+MISURATORI: Metal 20 cod.0100 (Ø2-20mm,±1-2%) | Metal Medium 30 cod.0111 (Ø2-30mm) | Supermetal 60 cod.0120 | Specialone cod.0121 (Ø3-120mm) | Stratificatore 5314 ACE 4" | Stratificatore 5312 Siemens 7"
+
+REGOLE ASSOLUTE:
+1. Dati mancanti → chiedi prima, non proporre modello
+2. Non inventare numeri offerta, prodotti, prezzi
+3. Lingua cliente sempre. Non IT/EN/ES → EN + traduzione sotto
+4. Solo ringraziamento/cortesia → "⚠️ NESSUNA RISPOSTA NECESSARIA - [motivo]"
+5. Non attaccare concorrenza. Difendi con fatti tecnici
+6. No sconti garantiti a priori
+7. No firma aziendale (Outlook la aggiunge)
+8. Sopralluogo → agenda fitta, info via email
+
+SALUTI: IT: Buongiorno/Buonasera + Cordiali saluti | EN: Dear Mr./Ms. + Best regards | ES: Estimado + Atentamente | DE: EN + DE "Mit freundlichen Grüßen" | FR: Cordialement | PT: EN + PT "Atenciosamente"
+
+CASISTICHE:
+[EASY NO stratificazione]: suggerire INTERMATRIX 0421
+[IRON vs TITANIUM]: TITANIUM se serve movimentare, IRON se solo solleva+svolge
+[Double vs Fast]: Double=cavo max 30mm pesi ridotti | Fast=usi intensivi cavo fino 50mm
+[Rack costoso]: durata illimitata, no manutenzione, sicurezza operatori
+[MID misuratori]: errore ±0.5% certificato, costo ~5x, richiesto in Germania
+[Lead DirectIndustry]: rispondere entro 24h, essere concisi e professionali, invitare a fornire specifiche tecniche
+[Reclamo/garanzia]: raccogliere numero serie e foto, non ammettere colpa, offrire supporto tecnico rapido
+[Spedizione]: tempi EU 3-5gg, extra-EU 7-15gg, Incoterms EXW o DAP standard
+[Agente/rivenditore]: non comunicare prezzi a non autorizzati, rimandare a direzione commerciale
+
+FORMATO: Solo testo puro bozza email. Zero introduzioni/spiegazioni/markdown.
+Se non necessaria risposta: "⚠️ NESSUNA RISPOSTA NECESSARIA - " + motivo.`;
+
+// ============================================================
+// STATE
+// ============================================================
+let aKey = '', sLang = 'auto', emailBody = '', emailFrom = '', emailSubject = '';
+
+// ============================================================
+// INIT — Office.js
+// ============================================================
+Office.onReady((info) => {
+  if (info.host === Office.HostType.Outlook) {
+    loadEmailData();
+  }
+  const saved = localStorage.getItem('cef_k');
+  if (saved && saved.startsWith('sk-')) {
+    aKey = saved;
+    document.getElementById('apiKey').value = saved;
+    document.getElementById('apiNotice').style.display = 'none';
+    document.getElementById('apiOk').style.display = 'flex';
+  }
+});
+
+function loadEmailData() {
+  const item = Office.context.mailbox.item;
+  if (!item) return;
+
+  // Sender
+  emailFrom = item.from ? (item.from.displayName || item.from.emailAddress || '') : '';
+  emailSubject = item.subject || '';
+
+  document.getElementById('ecFrom').textContent = emailFrom || 'Mittente sconosciuto';
+  document.getElementById('ecSubj').textContent = emailSubject || '(nessun oggetto)';
+
+  // Body (plain text)
+  item.body.getAsync(Office.CoercionType.Text, (result) => {
+    if (result.status === Office.AsyncResultStatus.Succeeded) {
+      emailBody = result.value || '';
+      const preview = emailBody.replace(/\s+/g, ' ').trim().slice(0, 140);
+      document.getElementById('ecPrev').textContent = preview || '(corpo vuoto)';
+
+      // Auto-detect language and show badge
+      const lang = detectLang(emailBody + ' ' + emailSubject);
+      const langBadge = document.createElement('span');
+      langBadge.className = 'ec-lang lc-' + lang.toLowerCase();
+      langBadge.textContent = langFlag(lang) + ' ' + lang;
+      document.getElementById('emailCard').appendChild(langBadge);
+
+      // DirectIndustry detection
+      if (/directindustry/i.test(emailFrom) || /request@direct/i.test(emailFrom) || /directindustry/i.test(emailBody)) {
+        document.getElementById('diBanner').style.display = 'flex';
+      }
+    }
+  });
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function saveK() {
+  const v = document.getElementById('apiKey').value.trim();
+  aKey = v;
+  if (v.startsWith('sk-') && v.length > 25) {
+    localStorage.setItem('cef_k', v);
+    document.getElementById('apiNotice').style.display = 'none';
+    document.getElementById('apiOk').style.display = 'flex';
+  }
+}
+
+function sL(l, btn) {
+  sLang = l;
+  document.querySelectorAll('.lb').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function detectLang(t) {
+  if (/\b(estimado|buenos|gracias|adjunto|presupuesto|bobina|cable)\b/i.test(t)) return 'ES';
+  if (/\b(sehr|bitte|danke|angebot|kabel|anfrage|könnten)\b/i.test(t)) return 'DE';
+  if (/\b(bonjour|merci|veuillez|devis|câble|bobine|cordialement)\b/i.test(t)) return 'FR';
+  if (/\b(obrigado|prezado|solicita|cabo|orçamento|bom dia)\b/i.test(t)) return 'PT';
+  if (/\b(dear|hello|hi|please|cable|quotation|inquiry|regards)\b/i.test(t)) return 'EN';
+  return 'IT';
+}
+
+function langFlag(l) {
+  return {IT:'🇮🇹',EN:'🇬🇧',ES:'🇪🇸',DE:'🇩🇪',FR:'🇫🇷',PT:'🇵🇹'}[l] || '🌐';
+}
+
+function langBadgeHtml(l) {
+  const cls = {IT:'lc-it',EN:'lc-en',ES:'lc-es',DE:'lc-de',FR:'lc-fr',PT:'lc-pt'};
+  return `<span class="ec-lang ${cls[l]||'lc-en'}">${langFlag(l)} ${l}</span>`;
+}
+
+function parseDI() {
+  // Auto-set lead freddo + EN for DirectIndustry leads
+  document.getElementById('ctx').value = 'lead_freddo';
+  sLang = 'EN';
+  document.querySelectorAll('.lb').forEach(b => {
+    b.classList.remove('active');
+    if (b.textContent.includes('EN')) b.classList.add('active');
+  });
+  document.getElementById('diBanner').style.display = 'none';
+  // Show confirmation
+  const banner = document.getElementById('diBanner');
+  banner.innerHTML = '<span class="di-text">✓ Impostato: Lead freddo · EN</span>';
+  banner.style.background = 'var(--green-bg)';
+  banner.style.borderColor = 'var(--green-border)';
+  banner.style.display = 'flex';
+  setTimeout(() => { banner.style.display = 'none'; }, 2500);
+}
+
+// ============================================================
+// GENERATE
+// ============================================================
+async function generate() {
+  if (!emailBody && !emailSubject) {
+    document.getElementById('output').innerHTML = '<div class="er">❌ Nessuna email caricata. Apri un\'email in Outlook prima di usare l\'add-in.</div>';
+    return;
+  }
+  if (!aKey || !aKey.startsWith('sk-')) {
+    document.getElementById('output').innerHTML = '<div class="er">❌ Inserisci la tua API Key Anthropic qui sopra.</div>';
+    return;
+  }
+
+  const lang = sLang === 'auto' ? detectLang(emailBody + ' ' + emailSubject) : sLang;
+  const ctx = document.getElementById('ctx').value;
+  const btn = document.getElementById('gBtn');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:flex;gap:3px"><span class="ld"></span><span class="ld"></span><span class="ld"></span></span>';
+  document.getElementById('output').innerHTML = '<div class="ldc"><div class="ldr"><span class="ld"></span><span class="ld"></span><span class="ld"></span></div>Generazione bozza...</div>';
+
+  const ln = {
+    IT:'Risposta in ITALIANO.',
+    EN:'Risposta in INGLESE.',
+    ES:'Risposta in SPAGNOLO.',
+    DE:'Risposta in INGLESE prima, poi traduzione TEDESCO sotto.',
+    FR:'Risposta in FRANCESE.',
+    PT:'Risposta in INGLESE prima, poi traduzione PORTOGHESE sotto.'
+  };
+
+  const emailContext = `Da: ${emailFrom}\nOggetto: ${emailSubject}\n\n${emailBody}`;
+  const userMsg = `LINGUA: ${ln[lang]||ln['EN']}${ctx ? '\nTIPO: '+ctx.replace(/_/g,' ').toUpperCase()+'.' : ''}\n\nEMAIL RICEVUTA:\n${emailContext.slice(0, 3000)}`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SP,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.error?.message || `HTTP ${r.status}`);
+    }
+
+    const d = await r.json();
+    const draft = d.content?.map(b => b.text || '').join('').trim() || 'Errore nella generazione.';
+    const isNoReply = draft.startsWith('⚠️');
+    const ts = new Date().toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+
+    if (isNoReply) {
+      document.getElementById('output').innerHTML = `<div class="nr">⚠️ ${draft.replace('⚠️ ', '')}</div>`;
+    } else {
+      document.getElementById('output').innerHTML = `
+        <div class="draft-card">
+          <div class="dc-header">
+            <span class="dc-title">✦ bozza ${langBadgeHtml(lang)}</span>
+            <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace">${ts}</span>
+          </div>
+          <div class="dc-body" id="draftBody">${escHtml(draft)}</div>
+          <div class="dc-actions">
+            <button class="ab reply-btn" onclick="replyWithDraft()">↩ Rispondi in Outlook</button>
+            <button class="ab" id="copyBtn" onclick="copyDraft()">⎘ Copia</button>
+            <button class="ab" onclick="refine('Rendi più breve')">Più breve</button>
+            <button class="ab" onclick="refine('Rendi più formale')">Più formale</button>
+            <button class="ab" onclick="refine('Difendi il prezzo con vantaggi tecnici')">Difendi prezzo</button>
+          </div>
+        </div>`;
+    }
+  } catch(e) {
+    document.getElementById('output').innerHTML = `<div class="er">❌ <strong>Errore:</strong> ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✦ Genera bozza di risposta';
+}
+
+// ============================================================
+// REPLY IN OUTLOOK
+// ============================================================
+function replyWithDraft() {
+  const draftEl = document.getElementById('draftBody');
+  if (!draftEl) return;
+  const text = draftEl.innerText;
+
+  Office.context.mailbox.item.displayReplyForm({ htmlBody: `<pre style="font-family:Calibri,sans-serif;font-size:11pt;white-space:pre-wrap">${escHtml(text)}</pre>` });
+}
+
+// ============================================================
+// COPY
+// ============================================================
+function copyDraft() {
+  const t = document.getElementById('draftBody');
+  if (!t) return;
+  navigator.clipboard.writeText(t.innerText).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ Copiato!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+// ============================================================
+// REFINE
+// ============================================================
+async function refine(instruction) {
+  const current = document.getElementById('draftBody')?.innerText;
+  if (!current || !aKey) return;
+
+  const lang = sLang === 'auto' ? detectLang(emailBody) : sLang;
+  const btn = document.getElementById('gBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:flex;gap:3px"><span class="ld"></span><span class="ld"></span><span class="ld"></span></span>';
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': aKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SP,
+        messages: [{
+          role: 'user',
+          content: `EMAIL ORIGINALE:\n${emailBody.slice(0, 1500)}\n\n[ISTRUZIONE: ${instruction}]\n[BOZZA DA MODIFICARE:\n${current}]`
+        }]
+      })
+    });
+
+    const d = await r.json();
+    const refined = d.content?.map(b => b.text || '').join('').trim();
+    if (refined) {
+      document.getElementById('draftBody').textContent = refined;
+    }
+  } catch(e) {}
+
+  btn.disabled = false;
+  btn.innerHTML = '✦ Genera bozza di risposta';
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
