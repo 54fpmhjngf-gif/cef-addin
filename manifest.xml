@@ -7,18 +7,18 @@
   xsi:type="MailApp">
 
   <!-- SOSTITUISCI questo ID con uno generato su https://www.guidgenerator.com -->
-  <Id>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</Id>
+  <Id>3DEE1D77-2E66-4076-827C-253138DC776D</Id>
   <Version>1.0.0.0</Version>
   <ProviderName>CEF Srl</ProviderName>
   <DefaultLocale>it-IT</DefaultLocale>
   <DisplayName DefaultValue="CEF/mail"/>
   <Description DefaultValue="Genera bozze email CEF con AI — Simon Zerella"/>
-  <IconUrl DefaultValue="https://cef-mail.vercel.app/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://cef-mail.vercel.app/icon-128.png"/>
+  <IconUrl DefaultValue="https://project-qyb4m.vercel.app/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://project-qyb4m.vercel.app/icon-128.png"/>
   <SupportUrl DefaultValue="mailto:simon@cef.it"/>
 
   <AppDomains>
-    <AppDomain>https://cef-mail.vercel.app</AppDomain>
+    <AppDomain>https://project-qyb4m.vercel.app</AppDomain>
     <AppDomain>https://api.anthropic.com</AppDomain>
   </AppDomains>
 
@@ -35,7 +35,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://cef-mail.vercel.app/taskpane.html"/>
+        <SourceLocation DefaultValue="https://project-qyb4m.vercel.app/taskpane.html"/>
         <RequestedHeight>550</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -89,13 +89,13 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://cef-mail.vercel.app/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://cef-mail.vercel.app/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://cef-mail.vercel.app/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://project-qyb4m.vercel.app/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://project-qyb4m.vercel.app/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://project-qyb4m.vercel.app/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Commands.Url" DefaultValue="https://cef-mail.vercel.app/commands.html"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://cef-mail.vercel.app/taskpane.html"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://project-qyb4m.vercel.app/commands.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://project-qyb4m.vercel.app/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="CEF/mail"/>
