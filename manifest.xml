@@ -9,8 +9,8 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="CEF mail"/>
   <Description DefaultValue="Genera bozze email CEF con AI"/>
-  <IconUrl DefaultValue="https://project-qyb4m.vercel.app/icon.svg"/>
-  <HighResolutionIconUrl DefaultValue="https://project-qyb4m.vercel.app/icon.svg"/>
+  <IconUrl DefaultValue="https://project-qyb4m.vercel.app/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://project-qyb4m.vercel.app/icon-128.png"/>
   <SupportUrl DefaultValue="https://project-qyb4m.vercel.app"/>
   <AppDomains>
     <AppDomain>project-qyb4m.vercel.app</AppDomain>
@@ -75,9 +75,9 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="icon16" DefaultValue="https://project-qyb4m.vercel.app/icon.svg"/>
-        <bt:Image id="icon32" DefaultValue="https://project-qyb4m.vercel.app/icon.svg"/>
-        <bt:Image id="icon80" DefaultValue="https://project-qyb4m.vercel.app/icon.svg"/>
+        <bt:Image id="icon16" DefaultValue="https://project-qyb4m.vercel.app/icon-16.png"/>
+        <bt:Image id="icon32" DefaultValue="https://project-qyb4m.vercel.app/icon-32.png"/>
+        <bt:Image id="icon80" DefaultValue="https://project-qyb4m.vercel.app/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Cmd" DefaultValue="https://project-qyb4m.vercel.app/commands.html"/>
